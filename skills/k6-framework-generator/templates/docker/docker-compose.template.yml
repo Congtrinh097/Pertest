@@ -1,0 +1,57 @@
+services:
+  k6-smoke:
+    image: grafana/k6:latest
+    volumes: [ ".:/app" ]
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - VUS=${VUS:-2}
+      - DURATION=${DURATION:-30s}
+    command: run k6-performance/tests/smoke/crud.smoke.js
+
+  k6-load:
+    image: grafana/k6:latest
+    volumes: [ ".:/app" ]
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - VUS=${VUS:-20}
+      - DURATION=${DURATION:-3m}
+    command: run k6-performance/tests/load/crud.load.js
+
+  k6-stress:
+    image: grafana/k6:latest
+    volumes: [ ".:/app" ]
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - VUS=${VUS:-120}
+    command: run k6-performance/tests/stress/crud.stress.js
+
+  k6-spike:
+    image: grafana/k6:latest
+    volumes: [ ".:/app" ]
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - SPIKE_PEAK_RATE=${SPIKE_PEAK_RATE:-80}
+    command: run k6-performance/tests/spike/crud.spike.js
+
+  k6-soak:
+    image: grafana/k6:latest
+    volumes: [ ".:/app" ]
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - VUS=${VUS:-25}
+      - SOAK_DURATION=${SOAK_DURATION:-20m}
+    command: run k6-performance/tests/soak/crud.soak.js
+
+  k6-breakpoint:
+    image: grafana/k6:latest
+    volumes: [ ".:/app" ]
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - BREAKPOINT_MAX_RATE=${BREAKPOINT_MAX_RATE:-250}
+    command: run k6-performance/tests/breakpoint/crud.breakpoint.js

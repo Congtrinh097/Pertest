@@ -1,0 +1,100 @@
+# ==============================================================================
+# Azure DevOps Pipeline for K6 Performance Testing
+# ==============================================================================
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+parameters:
+  - name: testType
+    displayName: Performance Test Type
+    type: string
+    default: smoke
+    values:
+      - smoke
+      - load
+      - stress
+      - spike
+      - soak
+      - breakpoint
+
+  - name: targetEnv
+    displayName: Target Environment
+    type: string
+    default: dev
+    values:
+      - dev
+      - staging
+      - production
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: k6Version
+    value: 'latest'
+
+steps:
+  # Safety Check: Prevent automated destructive tests against production
+  - bash: |
+      if [ "${{ parameters.targetEnv }}" == "production" ] && [ "${{ parameters.testType }}" != "smoke" ] && [ "${{ parameters.testType }}" != "load" ]; then
+        echo "##vso[task.logissue type=error]Running ${{ parameters.testType }} against production is strictly prohibited!"
+        exit 1
+      fi
+    displayName: 'Production Safety Guard'
+
+  # 1. Pull Grafana K6 Docker image
+  - bash: docker pull grafana/k6:$(k6Version)
+    displayName: 'Pull K6 Image'
+
+  # 2. Validate scripts
+  - bash: |
+      docker run --rm \
+        -v $(System.DefaultWorkingDirectory):/app \
+        -w /app \
+        grafana/k6:$(k6Version) inspect k6-performance/tests/smoke/crud.smoke.js
+    displayName: '1. Validate K6 Test Scripts'
+
+  # 3. Run Smoke Tests
+  - bash: |
+      docker run --rm \
+        -v $(System.DefaultWorkingDirectory):/app \
+        -w /app \
+        -e ENV="${{ parameters.targetEnv }}" \
+        -e DURATION="30s" \
+        grafana/k6:$(k6Version) run k6-performance/tests/smoke/crud.smoke.js
+    displayName: '2. Execute Smoke Test'
+
+  # 4. Run Load Test (When selected or on main)
+  - bash: |
+      docker run --rm \
+        -v $(System.DefaultWorkingDirectory):/app \
+        -w /app \
+        -e ENV="${{ parameters.targetEnv }}" \
+        -e VUS="20" \
+        -e DURATION="2m" \
+        grafana/k6:$(k6Version) run k6-performance/tests/load/crud.load.js
+    condition: and(succeeded(), or(eq('${{ parameters.testType }}', 'load'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
+    displayName: '3. Execute Load Test'
+
+  # 5. Run Advanced Test Profile (When explicitly selected)
+  - bash: |
+      docker run --rm \
+        -v $(System.DefaultWorkingDirectory):/app \
+        -w /app \
+        -e ENV="${{ parameters.targetEnv }}" \
+        grafana/k6:$(k6Version) run "k6-performance/tests/${{ parameters.testType }}/crud.${{ parameters.testType }}.js"
+    condition: and(succeeded(), ne('${{ parameters.testType }}', 'smoke'), ne('${{ parameters.testType }}', 'load'))
+    displayName: '4. Execute Advanced Test Profile'
+
+  # 6. Archive Reports
+  - task: PublishPipelineArtifact@1
+    condition: always()
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/k6-performance/reports'
+      artifact: 'K6-Performance-Reports'
+      publishLocation: 'pipeline'
+    displayName: '5. Archive Performance Reports'

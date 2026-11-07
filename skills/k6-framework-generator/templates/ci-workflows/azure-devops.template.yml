@@ -1,0 +1,49 @@
+# Azure DevOps Performance Testing Pipeline Template
+trigger:
+  branches:
+    include: [ main, develop ]
+
+parameters:
+  - name: testType
+    displayName: Test Profile
+    type: string
+    default: smoke
+    values: [ smoke, load, stress, spike, soak, breakpoint ]
+  - name: targetEnv
+    displayName: Environment
+    type: string
+    default: dev
+    values: [ dev, staging, production ]
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - bash: |
+      if [ "${{ parameters.targetEnv }}" == "production" ] && [ "${{ parameters.testType }}" != "smoke" ] && [ "${{ parameters.testType }}" != "load" ]; then
+        echo "##vso[task.logissue type=error]Running ${{ parameters.testType }} against production is prohibited!"
+        exit 1
+      fi
+    displayName: 'Safety Check'
+
+  - bash: docker pull grafana/k6:latest
+    displayName: 'Pull K6 Image'
+
+  - bash: |
+      docker run --rm -v $(System.DefaultWorkingDirectory):/app -w /app \
+        grafana/k6:latest inspect k6-performance/tests/smoke/crud.smoke.js
+    displayName: 'Validate K6 Scripts'
+
+  - bash: |
+      docker run --rm -v $(System.DefaultWorkingDirectory):/app -w /app \
+        -e ENV="${{ parameters.targetEnv }}" -e DURATION="30s" \
+        grafana/k6:latest run k6-performance/tests/smoke/crud.smoke.js
+    displayName: 'Execute Smoke Test'
+
+  - task: PublishPipelineArtifact@1
+    condition: always()
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/k6-performance/reports'
+      artifact: 'K6-Performance-Reports'
+      publishLocation: 'pipeline'
+    displayName: 'Archive Reports'

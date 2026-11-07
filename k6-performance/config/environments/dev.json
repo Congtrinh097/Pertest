@@ -1,0 +1,16 @@
+{
+  "name": "development",
+  "baseUrl": "https://dummyjson.com",
+  "timeout": "10s",
+  "insecureSkipTLSVerify": true,
+  "mockMode": true,
+  "auth": {
+    "loginEndpoint": "/auth/login",
+    "defaultUsername": "emilys",
+    "defaultPassword": "emilyspass"
+  },
+  "endpoints": {
+    "users": "/users",
+    "products": "/products"
+  }
+}

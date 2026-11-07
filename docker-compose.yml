@@ -1,0 +1,125 @@
+services:
+  # ============================================================================
+  # Realtime Observability Stack (Grafana + InfluxDB)
+  # ============================================================================
+  influxdb:
+    image: influxdb:1.8
+    container_name: k6-influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+    volumes:
+      - k6_influxdb_data:/var/lib/influxdb
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: k6-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_USERS_DEFAULT_THEME=dark
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards/json
+    depends_on:
+      - influxdb
+
+  # ============================================================================
+  # K6 Test Runners
+  # ============================================================================
+  k6-smoke:
+    image: grafana/k6:latest
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - VUS=${VUS:-2}
+      - DURATION=${DURATION:-30s}
+      - WORKLOAD_MODE=${WORKLOAD_MODE:-mixed}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command: run --out influxdb=http://influxdb:8086/k6 k6-performance/tests/smoke/crud.smoke.js
+    depends_on:
+      - influxdb
+
+  k6-load:
+    image: grafana/k6:latest
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - VUS=${VUS:-20}
+      - DURATION=${DURATION:-3m}
+      - WORKLOAD_MODE=${WORKLOAD_MODE:-mixed}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command: run --out influxdb=http://influxdb:8086/k6 k6-performance/tests/load/crud.load.js
+    depends_on:
+      - influxdb
+
+  k6-stress:
+    image: grafana/k6:latest
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - VUS=${VUS:-120}
+      - WORKLOAD_MODE=${WORKLOAD_MODE:-mixed}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command: run --out influxdb=http://influxdb:8086/k6 k6-performance/tests/stress/crud.stress.js
+    depends_on:
+      - influxdb
+
+  k6-spike:
+    image: grafana/k6:latest
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - SPIKE_PEAK_RATE=${SPIKE_PEAK_RATE:-80}
+      - WORKLOAD_MODE=${WORKLOAD_MODE:-mixed}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command: run --out influxdb=http://influxdb:8086/k6 k6-performance/tests/spike/crud.spike.js
+    depends_on:
+      - influxdb
+
+  k6-soak:
+    image: grafana/k6:latest
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - VUS=${VUS:-25}
+      - SOAK_DURATION=${SOAK_DURATION:-20m}
+      - WORKLOAD_MODE=${WORKLOAD_MODE:-mixed}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command: run --out influxdb=http://influxdb:8086/k6 k6-performance/tests/soak/crud.soak.js
+    depends_on:
+      - influxdb
+
+  k6-breakpoint:
+    image: grafana/k6:latest
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - ENV=${ENV:-dev}
+      - BREAKPOINT_MAX_RATE=${BREAKPOINT_MAX_RATE:-250}
+      - WORKLOAD_MODE=${WORKLOAD_MODE:-mixed}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command: run --out influxdb=http://influxdb:8086/k6 k6-performance/tests/breakpoint/crud.breakpoint.js
+    depends_on:
+      - influxdb
+
+volumes:
+  k6_influxdb_data:

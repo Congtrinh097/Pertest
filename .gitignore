@@ -1,0 +1,24 @@
+# Node & Dependencies
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# Test Reports and Artifacts
+k6-performance/reports/*.json
+k6-performance/reports/html/*.html
+k6-performance/reports/json/*.json
+k6-performance/reports/summary/*.txt
+!k6-performance/reports/**/.gitkeep
+
+# Environment secrets and local files
+.env
+.env.local
+*.secret.json
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Cloned Target Codebase
+codebase/
+

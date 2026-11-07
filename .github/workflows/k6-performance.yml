@@ -1,0 +1,108 @@
+name: K6 Performance Testing CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Select Performance Test Profile'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - load
+          - stress
+          - spike
+          - soak
+          - breakpoint
+      target_env:
+        description: 'Target Environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+jobs:
+  validate-and-test:
+    name: K6 Performance Pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Pull Official Grafana K6 Docker Image
+        run: docker pull grafana/k6:latest
+
+      # Safety Guard: Ensure destructive tests never target production automatically
+      - name: Production Safety Check
+        run: |
+          TEST_TYPE="${{ github.event.inputs.test_type || 'smoke' }}"
+          TARGET_ENV="${{ github.event.inputs.target_env || 'dev' }}"
+          if [ "$TARGET_ENV" = "production" ] && [ "$TEST_TYPE" != "smoke" ] && [ "$TEST_TYPE" != "load" ]; then
+            echo "ERROR: Running $TEST_TYPE against production is strictly prohibited!"
+            exit 1
+          fi
+
+      # 1. Script Syntax Validation
+      - name: Validate K6 Test Scripts
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -w /app \
+            grafana/k6:latest inspect k6-performance/tests/smoke/crud.smoke.js
+
+      # 2. Run Smoke Test
+      - name: Run K6 Smoke Test
+        run: |
+          TARGET_ENV="${{ github.event.inputs.target_env || 'dev' }}"
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -w /app \
+            -e ENV="$TARGET_ENV" \
+            -e DURATION="30s" \
+            grafana/k6:latest run k6-performance/tests/smoke/crud.smoke.js
+
+      # 3. Run Load Test (Only when explicitly triggered or on release branch)
+      - name: Run K6 Load Test (Conditional)
+        if: github.event.inputs.test_type == 'load' || github.ref == 'refs/heads/main'
+        run: |
+          TARGET_ENV="${{ github.event.inputs.target_env || 'staging' }}"
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -w /app \
+            -e ENV="$TARGET_ENV" \
+            -e VUS="20" \
+            -e DURATION="2m" \
+            grafana/k6:latest run k6-performance/tests/load/crud.load.js
+
+      # 4. Run Stress / Spike / Soak / Breakpoint (Manual Trigger Only, Non-Production)
+      - name: Run Advanced Test Profile (Manual)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.test_type != 'smoke' && github.event.inputs.test_type != 'load'
+        run: |
+          TEST_TYPE="${{ github.event.inputs.test_type }}"
+          TARGET_ENV="${{ github.event.inputs.target_env }}"
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -w /app \
+            -e ENV="$TARGET_ENV" \
+            grafana/k6:latest run "k6-performance/tests/$TEST_TYPE/crud.$TEST_TYPE.js"
+
+      # 5. Archive Reports
+      - name: Upload Performance Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-performance-reports
+          path: |
+            k6-performance/reports/html/
+            k6-performance/reports/json/
+            k6-performance/reports/summary/
+          retention-days: 30

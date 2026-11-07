@@ -1,0 +1,16 @@
+{
+  "name": "staging",
+  "baseUrl": "https://staging-api.example.com",
+  "timeout": "15s",
+  "insecureSkipTLSVerify": false,
+  "mockMode": false,
+  "auth": {
+    "loginEndpoint": "/api/v1/auth/login",
+    "defaultUsername": "staging_testuser@example.com",
+    "defaultPassword": "StagingPassword123!"
+  },
+  "endpoints": {
+    "users": "/api/v1/users",
+    "products": "/api/v1/products"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "title": "Enterprise K6 Performance & SLA Dashboard",
+  "uid": "k6-enterprise-sla",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total Throughput (RPS) & Virtual Users (VUs)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(k6_http_reqs_total[1m])",
+          "legendFormat": "Requests/sec"
+        },
+        {
+          "expr": "k6_vus",
+          "legendFormat": "Active VUs"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Response Time Percentiles (P90, P95, P99)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "k6_http_req_duration{quantile='0.90'}",
+          "legendFormat": "P90"
+        },
+        {
+          "expr": "k6_http_req_duration{quantile='0.95'}",
+          "legendFormat": "P95 (SLA Threshold)"
+        },
+        {
+          "expr": "k6_http_req_duration{quantile='0.99'}",
+          "legendFormat": "P99"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "HTTP Error Rate (%)",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "rate(k6_http_req_failed_total[1m]) / rate(k6_http_reqs_total[1m]) * 100",
+          "legendFormat": "Failure %"
+        }
+      ]
+    }
+  ]
+}

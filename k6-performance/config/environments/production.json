@@ -1,0 +1,16 @@
+{
+  "name": "production",
+  "baseUrl": "https://api.example.com",
+  "timeout": "20s",
+  "insecureSkipTLSVerify": false,
+  "mockMode": false,
+  "auth": {
+    "loginEndpoint": "/api/v1/auth/login",
+    "defaultUsername": "perf_test_bot@example.com",
+    "defaultPassword": "ChangeMeInCISecret!"
+  },
+  "endpoints": {
+    "users": "/api/v1/users",
+    "products": "/api/v1/products"
+  }
+}

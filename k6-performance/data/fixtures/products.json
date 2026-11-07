@@ -1,0 +1,29 @@
+[
+  {
+    "id": 101,
+    "sku": "PROD-SKU-001",
+    "name": "Cloud Enterprise Subscription",
+    "category": "Software",
+    "price": 299.99,
+    "inStock": true,
+    "inventory": 500
+  },
+  {
+    "id": 102,
+    "sku": "PROD-SKU-002",
+    "name": "API Gateway High-Volume License",
+    "category": "Infrastructure",
+    "price": 499.50,
+    "inStock": true,
+    "inventory": 200
+  },
+  {
+    "id": 103,
+    "sku": "PROD-SKU-003",
+    "name": "Developer Pro Tooling Suite",
+    "category": "Developer Tools",
+    "price": 89.00,
+    "inStock": true,
+    "inventory": 1500
+  }
+]

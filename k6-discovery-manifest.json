@@ -1,0 +1,210 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-11-07T11:23:13.281Z",
+  "targetDirectory": "E:\\Pertest\\codebase",
+  "detectedStacks": {
+    "backend": [
+      "Python (FastAPI / Django / Flask)"
+    ],
+    "frontend": [
+      "React"
+    ]
+  },
+  "apiSpecs": [],
+  "endpoints": [
+    {
+      "route": "/api/health",
+      "method": "GET",
+      "domain": "health",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/chat/stream",
+      "method": "POST",
+      "domain": "chat",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/leads",
+      "method": "POST",
+      "domain": "leads",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/legal/upload",
+      "method": "POST",
+      "domain": "legal",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/legal/documents",
+      "method": "GET",
+      "domain": "legal",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/legal/documents/{doc_id}/preview",
+      "method": "GET",
+      "domain": "legal",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/legal/documents/{doc_id}/index",
+      "method": "POST",
+      "domain": "legal",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/legal/documents/{doc_id}",
+      "method": "DELETE",
+      "domain": "legal",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/rag/evaluate",
+      "method": "GET",
+      "domain": "rag",
+      "source": "Python FastAPI Router (main.py)"
+    },
+    {
+      "route": "/api/rag/evaluate",
+      "method": "POST",
+      "domain": "rag",
+      "source": "Python FastAPI Router (main.py)"
+    }
+  ],
+  "dtos": {
+    "IntentClassification": {
+      "type": "object",
+      "properties": [
+        "intent",
+        "reason"
+      ],
+      "source": "Pydantic Model (agent.py)"
+    },
+    "PropertyCriteria": {
+      "type": "object",
+      "properties": [
+        "category",
+        "property_type",
+        "district",
+        "max_price",
+        "min_bedrooms",
+        "keywords",
+        "needs_clarification",
+        "customer_phone"
+      ],
+      "source": "Pydantic Model (agent.py)"
+    },
+    "MortgageExtraction": {
+      "type": "object",
+      "properties": [
+        "property_price",
+        "loan_amount",
+        "loan_ratio",
+        "tenure_years",
+        "annual_interest_rate",
+        "preferential_rate",
+        "preferential_months",
+        "method"
+      ],
+      "source": "Pydantic Model (agent.py)"
+    },
+    "ChatRequest": {
+      "type": "object",
+      "properties": [
+        "message",
+        "thread_id"
+      ],
+      "source": "Pydantic Model (main.py)"
+    },
+    "LeadRequest": {
+      "type": "object",
+      "properties": [
+        "name",
+        "phone",
+        "property_id",
+        "note"
+      ],
+      "source": "Pydantic Model (main.py)"
+    },
+    "MortgageInput": {
+      "type": "object",
+      "properties": [
+        "property_price",
+        "loan_amount",
+        "loan_ratio",
+        "tenure_years",
+        "annual_interest_rate",
+        "preferential_rate",
+        "preferential_months",
+        "method"
+      ],
+      "source": "Pydantic Model (mortgage_calculator.py)"
+    },
+    "MortgageResult": {
+      "type": "object",
+      "properties": [
+        "property_price",
+        "loan_amount",
+        "own_capital",
+        "tenure_years",
+        "tenure_months",
+        "annual_interest_rate",
+        "method",
+        "monthly_principal",
+        "first_month_payment",
+        "last_month_payment",
+        "total_interest",
+        "total_payment",
+        "summary_markdown"
+      ],
+      "source": "Pydantic Model (mortgage_calculator.py)"
+    },
+    "MortgageToolArgs": {
+      "type": "object",
+      "properties": [
+        "property_price",
+        "loan_amount",
+        "loan_ratio",
+        "tenure_years",
+        "annual_interest_rate",
+        "preferential_rate",
+        "preferential_months",
+        "method"
+      ],
+      "source": "Pydantic Model (mortgage_mcp_client.py)"
+    }
+  },
+  "auth": {
+    "type": "Bearer JWT",
+    "loginEndpoint": "/api/v1/auth/login",
+    "tokenField": "token",
+    "headerName": "Authorization",
+    "headerPrefix": "Bearer "
+  },
+  "businessFlows": [
+    {
+      "id": "flow-legal-crud",
+      "name": "LEGAL CRUD Lifecycle",
+      "domain": "legal",
+      "type": "CRUD",
+      "steps": [
+        "POST (Create entity)",
+        "GET (Verify entity retrieval)",
+        "DELETE (Clean up entity)"
+      ]
+    },
+    {
+      "id": "flow-rag-crud",
+      "name": "RAG CRUD Lifecycle",
+      "domain": "rag",
+      "type": "CRUD",
+      "steps": [
+        "POST (Create entity)",
+        "GET (Verify entity retrieval)"
+      ]
+    }
+  ],
+  "recommendations": []
+}

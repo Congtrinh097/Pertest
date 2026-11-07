@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "username": "admin_perf",
+    "email": "admin_perf@example.com",
+    "role": "admin",
+    "firstName": "Admin",
+    "lastName": "Performance",
+    "isActive": true
+  },
+  {
+    "id": 2,
+    "username": "standard_perf_1",
+    "email": "user1_perf@example.com",
+    "role": "user",
+    "firstName": "Standard",
+    "lastName": "UserOne",
+    "isActive": true
+  },
+  {
+    "id": 3,
+    "username": "standard_perf_2",
+    "email": "user2_perf@example.com",
+    "role": "user",
+    "firstName": "Standard",
+    "lastName": "UserTwo",
+    "isActive": true
+  }
+]

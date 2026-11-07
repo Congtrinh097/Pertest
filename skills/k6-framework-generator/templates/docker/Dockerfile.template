@@ -1,0 +1,6 @@
+FROM grafana/k6:latest
+WORKDIR /app
+COPY k6-performance /app/k6-performance
+VOLUME ["/app/k6-performance/reports"]
+ENTRYPOINT ["k6", "run"]
+CMD ["k6-performance/tests/smoke/crud.smoke.js"]
